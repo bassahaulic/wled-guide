@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WLED Setup Guide | Bassahaulic</title>
+<meta name="theme-color" content="#e21aff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@700;900&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #000000;
+  --surface: rgba(20, 20, 20, 0.55);
+  --surface-2: rgba(35, 35, 35, 0.5);
+  --surface-solid: #1a1a1a;
+  --text: #ffffff;
+  --text-muted: #cccccc;
+  --accent: #e21aff;
+  --accent-dim: rgba(226, 26, 255, 0.15);
+  --blue: #0097ff;
+  --green: #00ff66;
+  --red: #ff3333;
+  --border: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --radius: 12px;
+  --radius-lg: 18px;
+  --font-brand: 'Audiowide', cursive;
+  --font-heading: 'Orbitron', sans-serif;
+  --font-body: 'Roboto', system-ui, -apple-system, sans-serif;
+  --blur: blur(14px);
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.65;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ─── Matrix Rain Canvas ─── */
+#matrixCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.12;
+}
+
+/* ─── Sticky Progress Nav ─── */
+.progress-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-nav__brand {
+  font-family: var(--font-brand);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-right: auto;
+  white-space: nowrap;
+}
+
+.progress-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.progress-dot:hover { border-color: var(--accent); }
+.progress-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px rgba(226, 26, 255, 0.5); }
+.progress-dot.completed { background: var(--green); border-color: var(--green); }
+
+.progress-dot .tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: var(--blur);
+  color: var(--text);
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  border: 1px solid var(--glass-border);
+  pointer-events: none;
+}
+
+.progress-dot:hover .tooltip { display: block; }
+
+/* ─── Layout ─── */
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.page-content { padding-top: 72px; padding-bottom: 80px; }
+
+/* ─── Hero ─── */
+.hero {
+  text-align: center;
+  padding: 60px 0 48px;
+}
+
+.hero__badge {
+  display: inline-block;
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(226, 26, 255, 0.3);
+  backdrop-filter: var(--blur);
+  padding: 6px 16px;
+  border-radius: 999px;
+  margin-bottom: 20px;
+}
+
+.hero__title {
+  font-family: var(--font-brand);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero__subtitle {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 300;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ─── Glass Card (Step Card) ─── */
+.section {
+  margin-bottom: 40px;
+}
+
+.step-card {
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.step-card--bonus { border-left-color: var(--blue); }
+.step-card--trouble { border-left-color: var(--red); }
+.step-card--specs { border-left-color: var(--green); }
+
+.step-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1rem;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(226, 26, 255, 0.35);
+}
+
+.step-number--bonus { background: var(--blue); box-shadow: 0 0 12px rgba(0, 151, 255, 0.35); }
+.step-number--trouble { background: var(--red); font-size: 0.85rem; box-shadow: 0 0 12px rgba(255, 51, 51, 0.35); }
+.step-number--specs { background: var(--green); font-size: 0.85rem; box-shadow: 0 0 12px rgba(0, 255, 102, 0.35); }
+
+.step-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.3;
+  padding-top: 6px;
+}
+
+.step-body p {
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  font-weight: 300;
+}
+
+.step-body p:last-child { margin-bottom: 0; }
+.step-body strong { color: var(--text); font-weight: 500; }
+
+/* ─── Checklist ─── */
+.checklist {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+  backdrop-filter: var(--blur);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  font-weight: 400;
+}
+
+.checklist-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* ─── Inline Code / Copy Button ─── */
+.code-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--blur);
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9em;
+  color: var(--green);
+  cursor: pointer;
+  transition: border-color 0.2s;
+  white-space: nowrap;
+}
+
+.code-val:hover { border-color: var(--accent); }
+
+.code-val::after {
+  content: '\2767';
+  font-size: 0.8em;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.code-val:hover::after { opacity: 1; }
+.code-val.copied { border-color: var(--green); }
+.code-val.copied::after { content: '\2713'; opacity: 1; color: var(--green); }
+
+/* ─── Instruction List ─── */
+.instructions {
+  list-style: none;
+  counter-reset: inst;
+  display: grid;
+  gap: 12px;
+}
+
+.instructions li {
+  counter-increment: inst;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  color: var(--text-muted);
+  font-weight: 300;
+}
+
+.instructions li::before {
+  content: counter(inst);
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  margin-top: 2px;
+}
+
+/* ─── Image Placeholder ─── */
+.img-placeholder {
+  border: 2px dashed rgba(226, 26, 255, 0.35);
+  border-radius: var(--radius);
+  background: rgba(226, 26, 255, 0.04);
+  backdrop-filter: var(--blur);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  margin: 20px 0;
+  min-height: 180px;
+  text-align: center;
+  gap: 8px;
+}
+
+.img-placeholder--wide { aspect-ratio: 16 / 9; }
+.img-placeholder--tall { aspect-ratio: 3 / 4; max-width: 300px; margin-left: auto; margin-right: auto; }
+
+.img-placeholder__icon { font-size: 2rem; opacity: 0.35; }
+
+.img-placeholder__label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+.img-placeholder__hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.img-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+/* ─── Info Box ─── */
+.info-box {
+  background: rgba(0, 151, 255, 0.08);
+  border: 1px solid rgba(0, 151, 255, 0.25);
+  backdrop-filter: var(--blur);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.info-box--warn {
+  background: rgba(255, 51, 51, 0.08);
+  border-color: rgba(255, 51, 51, 0.25);
+}
+
+.info-box__icon { flex-shrink: 0; font-size: 1.1rem; margin-top: 1px; }
+
+/* ─── Specs Grid ─── */
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.spec-item {
+  background: var(--surface-2);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.spec-label {
+  font-size: 0.7rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.spec-value {
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+/* ─── Collapsible (Details/Summary) ─── */
+details.bonus-section {
+  margin-bottom: 32px;
+}
+
+details.bonus-section > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: border-color 0.2s;
+}
+
+details.bonus-section > summary:hover { border-color: var(--blue); }
+details.bonus-section > summary::-webkit-details-marker { display: none; }
+
+details.bonus-section > summary .chevron {
+  margin-left: auto;
+  transition: transform 0.3s;
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+details.bonus-section[open] > summary .chevron { transform: rotate(90deg); }
+
+details.bonus-section[open] > summary {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom-color: transparent;
+}
+
+details.bonus-section .bonus-content {
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 24px;
+}
+
+/* ─── Platform Buttons ─── */
+.platform-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.platform-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: var(--blur);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.92rem;
+  text-decoration: none;
+  min-height: 44px;
+  transition: all 0.2s;
+}
+
+.platform-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.platform-btn__icon { font-size: 1.2rem; }
+
+/* ─── Wiring Table ─── */
+.wiring-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 0.92rem;
+}
+
+.wiring-table th,
+.wiring-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.wiring-table th {
+  font-family: var(--font-heading);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.wiring-table td { color: var(--text-muted); }
+
+.wire-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* ─── Button Functions ─── */
+.button-funcs {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.button-func {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: var(--surface-2);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+
+.button-func__action {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.button-func__desc {
+  color: var(--text-muted);
+  font-weight: 300;
+  font-size: 0.9rem;
+}
+
+/* ─── Toast ─── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--green);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ─── Footer ─── */
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  position: relative;
+  z-index: 1;
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer a:hover { text-decoration: underline; }
+
+/* ─── Responsive ─── */
+@media (max-width: 480px) {
+  .step-card { padding: 20px 16px; }
+  .step-header { gap: 12px; }
+  .step-number { width: 34px; height: 34px; font-size: 0.85rem; }
+  .specs-grid { grid-template-columns: 1fr; }
+  .img-row { grid-template-columns: 1fr; }
+  .progress-nav__brand { font-size: 0.65rem; letter-spacing: 1px; }
+  .progress-dot { width: 8px; height: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Matrix Rain Background ─── -->
+<canvas id="matrixCanvas"></canvas>
+
+<!-- ─── Progress Navigation ─── -->
+<nav class="progress-nav" aria-label="Setup progress">
+  <span class="progress-nav__brand">Bassahaulic</span>
+  <div class="progress-dots" id="progressDots">
+    <button class="progress-dot" data-target="hero" aria-label="Introduction"><span class="tooltip">Intro</span></button>
+    <button class="progress-dot" data-target="needs" aria-label="What you need"><span class="tooltip">What You Need</span></button>
+    <button class="progress-dot" data-target="step1" aria-label="Step 1"><span class="tooltip">Wiring</span></button>
+    <button class="progress-dot" data-target="step2" aria-label="Step 2"><span class="tooltip">Connect AP</span></button>
+    <button class="progress-dot" data-target="step3" aria-label="Step 3"><span class="tooltip">WiFi Setup</span></button>
+    <button class="progress-dot" data-target="step4" aria-label="Step 4"><span class="tooltip">Get the App</span></button>
+    <button class="progress-dot" data-target="step5" aria-label="Step 5"><span class="tooltip">LED Config</span></button>
+    <button class="progress-dot" data-target="step6" aria-label="Step 6"><span class="tooltip">Effects</span></button>
+    <button class="progress-dot" data-target="bonus" aria-label="Bonus"><span class="tooltip">Bonus</span></button>
+    <button class="progress-dot" data-target="troubleshoot" aria-label="Troubleshooting"><span class="tooltip">Troubleshoot</span></button>
+    <button class="progress-dot" data-target="specs" aria-label="Specs"><span class="tooltip">Specs</span></button>
+  </div>
+</nav>
+
+<main class="page-content">
+<div class="container">
+
+  <!-- ════════ HERO ════════ -->
+  <section class="hero section" id="hero">
+    <div class="hero__badge">Setup Guide</div>
+    <h1 class="hero__title">WLED Setup<br>Walkthrough</h1>
+    <p class="hero__subtitle">Everything you need to get your new LED strip and Gledopto WLED controller up and running. Follow along step by step — you'll be glowing in minutes.</p>
+  </section>
+
+  <!-- ════════ WHAT YOU'LL NEED ════════ -->
+  <div class="step-card" id="needs">
+    <div class="step-header">
+      <div class="step-number" style="background: var(--blue); box-shadow: 0 0 12px rgba(0,151,255,0.35);">&#9745;</div>
+      <h2 class="step-title">What You'll Need</h2>
+    </div>
+    <div class="step-body">
+      <p>Make sure you have all of these on hand before starting:</p>
+      <ul class="checklist">
+        <li><span class="checklist-icon">&#x1f39b;&#xfe0f;</span> <span><strong>Gledopto GL-C-016WL-D</strong> WLED Controller</span></li>
+        <li><span class="checklist-icon">&#x1f4a1;</span> <span><strong>WS2811 LED Strip</strong> (addressable, 12V)</span></li>
+        <li><span class="checklist-icon">&#x1f50c;</span> <span><strong>12V DC Power Supply</strong> rated for your strip's total wattage</span></li>
+        <li><span class="checklist-icon">&#x1f4f1;</span> <span><strong>Smartphone</strong> (iPhone or Android)</span></li>
+        <li><span class="checklist-icon">&#x1f4f6;</span> <span><strong>WiFi Network</strong> (2.4 GHz — WLED does not support 5 GHz)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 1: WIRING ════════ -->
+  <div class="step-card section" id="step1">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <h2 class="step-title">Wire Your LED Strip</h2>
+    </div>
+    <div class="step-body">
+      <p>The Gledopto controller has two LED outputs. <strong>GPIO16</strong> is the default and should be used first. GPIO2 is a secondary output you can enable later in the app.</p>
+
+      <table class="wiring-table">
+        <thead>
+          <tr><th>Wire</th><th>Controller Terminal</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="wire-color" style="background: #e22;"></span>VCC (Red)</td>
+            <td>VCC</td>
+            <td>+12V Power</td>
+          </tr>
+          <tr>
+            <td><span class="wire-color" style="background: #2a2;"></span>DATA (Green)</td>
+            <td>DATA (GPIO16)</td>
+            <td>Signal wire to LED strip DIN</td>
+          </tr>
+          <tr>
+            <td><span class="wire-color" style="background: #555;"></span>GND (Black/White)</td>
+            <td>GND</td>
+            <td>Ground — must be shared between controller &amp; strip</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box--warn info-box">
+        <span class="info-box__icon">&#x26a0;&#xfe0f;</span>
+        <span><strong>Important:</strong> Double-check all connections before powering on. Do not connect or disconnect wires while the power supply is on.</span>
+      </div>
+
+      <!-- REPLACE: Photo of Gledopto controller wiring terminals with WS2811 strip connected -->
+      <div class="img-placeholder img-placeholder--wide">
+        <div class="img-placeholder__icon">&#x1f4f7;</div>
+        <div class="img-placeholder__label">Photo: Wiring Connections</div>
+        <div class="img-placeholder__hint">Gledopto controller wired to WS2811 strip (GPIO16 output)</div>
+      </div>
+
+      <div class="info-box">
+        <span class="info-box__icon">&#x1f4a1;</span>
+        <span>The controller also has extended GPIO ports (18, 19, 25, 33) for advanced DIY use — you can ignore these for a basic setup.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 2: CONNECT TO WLED-AP ════════ -->
+  <div class="step-card section" id="step2">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <h2 class="step-title">Power On & Connect to WLED-AP</h2>
+    </div>
+    <div class="step-body">
+      <ol class="instructions">
+        <li><strong>Power on</strong> the controller by connecting your 12V power supply. The first 30 LEDs should light up orange — that means WLED is running.</li>
+        <li>On your phone, open <strong>WiFi Settings</strong> and look for a network called <span class="code-val" data-copy="WLED-AP">WLED-AP</span></li>
+        <li>Connect to it using the password <span class="code-val" data-copy="wled1234">wled1234</span></li>
+        <li>Your phone should automatically open the WLED welcome page. If it doesn't, open a browser and go to <span class="code-val" data-copy="4.3.2.1">4.3.2.1</span></li>
+      </ol>
+
+      <!-- REPLACE: Screenshot of phone WiFi list showing WLED-AP network -->
+      <div class="img-placeholder img-placeholder--tall">
+        <div class="img-placeholder__icon">&#x1f4f1;</div>
+        <div class="img-placeholder__label">Screenshot: WiFi List</div>
+        <div class="img-placeholder__hint">Phone WiFi settings showing "WLED-AP" network</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 3: CONFIGURE HOME WIFI ════════ -->
+  <div class="step-card section" id="step3">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <h2 class="step-title">Configure Your Home WiFi</h2>
+    </div>
+    <div class="step-body">
+      <ol class="instructions">
+        <li>On the WLED welcome page, tap <strong>"WIFI SETTINGS"</strong>.</li>
+        <li>Enter your home WiFi <strong>network name (SSID)</strong> and <strong>password</strong>.</li>
+        <li>Tap <strong>"Save & Connect"</strong> at the top of the page.</li>
+        <li>The controller will disconnect from WLED-AP and join your home WiFi. Reconnect your phone to your home WiFi.</li>
+        <li>The controller now has a local IP address on your network. You can find it in your router's admin page or through the WLED app (next step).</li>
+      </ol>
+
+      <div class="info-box">
+        <span class="info-box__icon">&#x2139;&#xfe0f;</span>
+        <span>Both the SSID and password are <strong>case-sensitive</strong>. Make sure they match exactly.</span>
+      </div>
+
+      <!-- REPLACE: Screenshot of WLED WiFi Settings configuration page -->
+      <div class="img-placeholder img-placeholder--wide">
+        <div class="img-placeholder__icon">&#x1f4f1;</div>
+        <div class="img-placeholder__label">Screenshot: WLED WiFi Settings</div>
+        <div class="img-placeholder__hint">WLED web interface WiFi configuration page</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 4: DOWNLOAD THE APP ════════ -->
+  <div class="step-card section" id="step4">
+    <div class="step-header">
+      <div class="step-number">4</div>
+      <h2 class="step-title">Download the WLED App</h2>
+    </div>
+    <div class="step-body">
+      <p>The WLED app gives you full control of your LEDs from your phone — colors, effects, presets, and more.</p>
+
+      <div class="platform-btns">
+        <a href="./app/index.html" class="platform-btn" style="border-color: var(--accent);">
+          <span class="platform-btn__icon">&#x1f4a1;</span> Bassahaulic WLED Controller
+        </a>
+        <a href="https://apps.apple.com/app/wled/id1475695033" target="_blank" rel="noopener" class="platform-btn">
+          <span class="platform-btn__icon">&#x1f34e;</span> iOS — App Store
+        </a>
+        <a href="https://github.com/Aircoookie/WLED-App/releases" target="_blank" rel="noopener" class="platform-btn">
+          <span class="platform-btn__icon">&#x1f916;</span> Android — GitHub
+        </a>
+      </div>
+
+      <div class="info-box">
+        <span class="info-box__icon">&#x2728;</span>
+        <span>Try our <strong><a href="./app/index.html" style="color:var(--accent);">Bassahaulic WLED Controller</a></strong> — a simplified, installable web app you can add to your home screen. No download needed!</span>
+      </div>
+
+      <p style="margin-top:16px;">Once installed:</p>
+      <ol class="instructions">
+        <li>Open the WLED app and tap the <strong>"+"</strong> button in the upper right corner.</li>
+        <li>Tap <strong>"Discover Lights"</strong> — the app will scan your network.</li>
+        <li>When you see <strong>"Found WLED!"</strong>, tap the checkmark to add it.</li>
+        <li>Your controller will now appear in the app's device list. Tap it to open the control panel.</li>
+      </ol>
+
+      <div class="info-box">
+        <span class="info-box__icon">&#x1f4a1;</span>
+        <span>Make sure your phone is on the <strong>same WiFi network</strong> as the controller. Discovery won't work across different networks.</span>
+      </div>
+
+      <!-- REPLACE: Screenshots of WLED app - add device flow -->
+      <div class="img-row">
+        <div class="img-placeholder img-placeholder--tall">
+          <div class="img-placeholder__icon">&#x1f4f1;</div>
+          <div class="img-placeholder__label">App: Home Screen</div>
+          <div class="img-placeholder__hint">WLED app with "+" button</div>
+        </div>
+        <div class="img-placeholder img-placeholder--tall">
+          <div class="img-placeholder__icon">&#x1f4f1;</div>
+          <div class="img-placeholder__label">App: Discover</div>
+          <div class="img-placeholder__hint">"Discover Lights" button</div>
+        </div>
+        <div class="img-placeholder img-placeholder--tall">
+          <div class="img-placeholder__icon">&#x1f4f1;</div>
+          <div class="img-placeholder__label">App: Found</div>
+          <div class="img-placeholder__hint">"Found WLED!" result</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 5: CONFIGURE LED STRIP ════════ -->
+  <div class="step-card section" id="step5">
+    <div class="step-header">
+      <div class="step-number">5</div>
+      <h2 class="step-title">Configure Your LED Strip</h2>
+    </div>
+    <div class="step-body">
+      <p>Now tell WLED what type of LEDs you have and how many.</p>
+      <ol class="instructions">
+        <li>In the WLED control page, tap <strong>"Config"</strong> (top-right corner).</li>
+        <li>Select <strong>"LED Preferences"</strong>.</li>
+        <li>Under <strong>Hardware Setup</strong>, set the following:
+          <table class="wiring-table" style="margin-top:10px;">
+            <tr><th>Setting</th><th>Value</th></tr>
+            <tr><td>LED Type</td><td><strong>WS2811</strong></td></tr>
+            <tr><td>Color Order</td><td><strong>RGB</strong></td></tr>
+            <tr><td>GPIO Pin</td><td><strong>16</strong> (default)</td></tr>
+            <tr><td>Length (LED Count)</td><td><strong>Your strip's LED count</strong></td></tr>
+          </table>
+        </li>
+        <li>Tap <strong>"Save"</strong> at the top of the page. The controller will reboot with your settings.</li>
+      </ol>
+
+      <div class="info-box">
+        <span class="info-box__icon">&#x1f4a1;</span>
+        <span>Not sure how many LEDs you have? WS2811 strips typically come in 30 or 60 LEDs per meter. Check your strip's packaging or count the individual LED chips.</span>
+      </div>
+
+      <!-- REPLACE: Screenshot of WLED LED Preferences / Hardware Setup page -->
+      <div class="img-placeholder img-placeholder--wide">
+        <div class="img-placeholder__icon">&#x1f4f1;</div>
+        <div class="img-placeholder__label">Screenshot: LED Preferences</div>
+        <div class="img-placeholder__hint">WLED Config &rarr; LED Preferences &rarr; Hardware Setup</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ STEP 6: EXPLORE EFFECTS ════════ -->
+  <div class="step-card section" id="step6">
+    <div class="step-header">
+      <div class="step-number">6</div>
+      <h2 class="step-title">Explore Effects & Presets</h2>
+    </div>
+    <div class="step-body">
+      <p>This is the fun part! WLED comes loaded with <strong>186+ lighting effects</strong> right out of the box.</p>
+
+      <p><strong>Color Picker</strong> — Tap the color wheel to choose any color. You can also set a specific brightness using the slider.</p>
+
+      <p><strong>Effects</strong> — Scroll through the effects list to try them out. Popular ones include:</p>
+      <ul class="checklist">
+        <li><span class="checklist-icon">&#x1f308;</span> <span><strong>Rainbow</strong> — Classic flowing rainbow cycle</span></li>
+        <li><span class="checklist-icon">&#x2728;</span> <span><strong>Twinkle</strong> — Random sparkling LEDs</span></li>
+        <li><span class="checklist-icon">&#x1f525;</span> <span><strong>Fire</strong> — Realistic fire simulation</span></li>
+        <li><span class="checklist-icon">&#x1f3c3;</span> <span><strong>Chase</strong> — Moving dot patterns</span></li>
+        <li><span class="checklist-icon">&#x1f3b5;</span> <span><strong>Audio Reactive</strong> — Effects that respond to sound (requires mic setup)</span></li>
+      </ul>
+
+      <p style="margin-top:16px;"><strong>Presets</strong> — Found a combo you love? Save it as a preset so you can recall it instantly. WLED supports up to <strong>250 presets</strong>.</p>
+
+      <p><strong>Segments</strong> — Split your strip into separate zones, each running different effects and colors independently. Great for creating custom lighting scenes.</p>
+
+      <!-- REPLACE: Screenshot of WLED effects / color picker interface -->
+      <div class="img-row">
+        <div class="img-placeholder img-placeholder--tall">
+          <div class="img-placeholder__icon">&#x1f3a8;</div>
+          <div class="img-placeholder__label">Screenshot: Color Picker</div>
+          <div class="img-placeholder__hint">WLED color wheel &amp; brightness</div>
+        </div>
+        <div class="img-placeholder img-placeholder--tall">
+          <div class="img-placeholder__icon">&#x2728;</div>
+          <div class="img-placeholder__label">Screenshot: Effects List</div>
+          <div class="img-placeholder__hint">WLED effects browser</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ BONUS SECTIONS ════════ -->
+  <div id="bonus">
+    <!-- Microphone Setup -->
+    <details class="bonus-section">
+      <summary>
+        <span class="step-number step-number--bonus" style="width:32px;height:32px;font-size:0.75rem;border-radius:8px;">&#x1f3a4;</span>
+        <span>Bonus: Microphone Setup (Audio-Reactive Effects)</span>
+        <span class="chevron">&#x25b6;</span>
+      </summary>
+      <div class="bonus-content">
+        <p style="color:var(--text-muted); margin-bottom:14px;">The Gledopto controller has a built-in microphone for sound-reactive lighting effects. Here's how to enable it:</p>
+        <ol class="instructions">
+          <li>In the WLED control page, tap <strong>"Config"</strong> &rarr; <strong>"Usermods"</strong>.</li>
+          <li>Find <strong>"Digital Mic"</strong> and set these values:
+            <table class="wiring-table" style="margin-top:10px;">
+              <tr><th>Setting</th><th>Value</th></tr>
+              <tr><td>Microphone Type</td><td><strong>Generic I2S</strong></td></tr>
+              <tr><td>I2S SD Pin</td><td><strong>26</strong></td></tr>
+              <tr><td>I2S WS Pin</td><td><strong>5</strong></td></tr>
+              <tr><td>I2S SCK Pin</td><td><strong>21</strong></td></tr>
+            </table>
+          </li>
+          <li>Tap <strong>"Save"</strong>, then <strong>power cycle the controller</strong> (unplug and replug power). The mic only activates after a full reboot.</li>
+          <li>Back on the control page, tap <strong>"Info"</strong> at the top, then toggle the button next to <strong>"Audio Reactive"</strong> to enable it.</li>
+          <li>Browse effects marked with a <strong>&#x266b; symbol</strong> — these respond to sound!</li>
+        </ol>
+        <div class="info-box">
+          <span class="info-box__icon">&#x2139;&#xfe0f;</span>
+          <span>Audio-reactive effects are marked with &#x266b; in the effects list. Try <strong>GEQ</strong> (graphic equalizer) or <strong>Gravimeter</strong> for starters.</span>
+        </div>
+      </div>
+    </details>
+
+    <!-- Relay Setup -->
+    <details class="bonus-section">
+      <summary>
+        <span class="step-number step-number--bonus" style="width:32px;height:32px;font-size:0.75rem;border-radius:8px;">&#x26a1;</span>
+        <span>Bonus: Relay Configuration (Power Saving)</span>
+        <span class="chevron">&#x25b6;</span>
+      </summary>
+      <div class="bonus-content">
+        <p style="color:var(--text-muted); margin-bottom:14px;">The controller has a built-in relay on <strong>GPIO 12</strong> that can completely cut output power when LEDs are off, saving energy.</p>
+        <ol class="instructions">
+          <li>Go to <strong>Config</strong> &rarr; <strong>"LED Preferences"</strong>.</li>
+          <li>Scroll down to find <strong>"Relay GPIO"</strong>.</li>
+          <li>Set the GPIO to <strong>12</strong> and make sure <strong>"Invert"</strong> is unchecked.</li>
+          <li>Tap <strong>"Save"</strong> to apply.</li>
+        </ol>
+        <div class="info-box--warn info-box">
+          <span class="info-box__icon">&#x26a0;&#xfe0f;</span>
+          <span>The relay only cuts power from the controller's output terminals. If your LED strip has additional power injection points, those will remain powered.</span>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ════════ TROUBLESHOOTING ════════ -->
+  <div class="step-card step-card--trouble section" id="troubleshoot">
+    <div class="step-header">
+      <div class="step-number step-number--trouble">&#x1f527;</div>
+      <h2 class="step-title">Troubleshooting & Reset</h2>
+    </div>
+    <div class="step-body">
+      <p><strong>Physical Button Functions:</strong></p>
+      <div class="button-funcs">
+        <div class="button-func">
+          <span class="button-func__action">Short Press</span>
+          <span class="button-func__desc">Turn LEDs on/off</span>
+        </div>
+        <div class="button-func">
+          <span class="button-func__action">Hold 1 sec</span>
+          <span class="button-func__desc">Cycle through colors</span>
+        </div>
+        <div class="button-func">
+          <span class="button-func__action">Hold 10 sec</span>
+          <span class="button-func__desc">Factory reset — re-enables WLED-AP hotspot</span>
+        </div>
+      </div>
+
+      <p style="margin-top:18px;"><strong>Common Issues:</strong></p>
+      <div class="button-funcs">
+        <div class="button-func">
+          <span class="button-func__action" style="min-width:140px;">No LEDs light up</span>
+          <span class="button-func__desc">Check wiring connections and verify your power supply voltage matches (12V for WS2811).</span>
+        </div>
+        <div class="button-func">
+          <span class="button-func__action" style="min-width:140px;">Can't find WLED-AP</span>
+          <span class="button-func__desc">Hold the Function button for 10 seconds to factory reset and re-enable the access point.</span>
+        </div>
+        <div class="button-func">
+          <span class="button-func__action" style="min-width:140px;">Wrong colors</span>
+          <span class="button-func__desc">Check Color Order in LED Preferences. WS2811 should be set to <strong>RGB</strong>.</span>
+        </div>
+        <div class="button-func">
+          <span class="button-func__action" style="min-width:140px;">App can't find device</span>
+          <span class="button-func__desc">Make sure your phone and the controller are on the same 2.4 GHz WiFi network.</span>
+        </div>
+        <div class="button-func">
+          <span class="button-func__action" style="min-width:140px;">Only some LEDs work</span>
+          <span class="button-func__desc">Check your LED count in Config &rarr; LED Preferences. Set it to match your actual strip length.</span>
+        </div>
+      </div>
+
+      <p style="margin-top:18px;"><strong>App-Based Factory Reset:</strong></p>
+      <ol class="instructions">
+        <li>Go to <strong>Config</strong> &rarr; <strong>"Security & Updates"</strong> (at the bottom).</li>
+        <li>Scroll down to <strong>"Factory reset"</strong> and check the box.</li>
+        <li>Tap <strong>"Save"</strong>. The controller will reset and re-enable the WLED-AP hotspot.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ════════ CONTROLLER SPECS ════════ -->
+  <div class="step-card step-card--specs section" id="specs">
+    <div class="step-header">
+      <div class="step-number step-number--specs">&#x1f4cb;</div>
+      <h2 class="step-title">Controller Quick Reference</h2>
+    </div>
+    <div class="step-body">
+      <p style="margin-bottom:4px;"><strong>Gledopto GL-C-016WL-D</strong> — ESP32 WLED Digital LED Controller with Mic</p>
+
+      <div class="specs-grid">
+        <div class="spec-item"><div class="spec-label">Input Voltage</div><div class="spec-value">DC 5V / 12V / 24V</div></div>
+        <div class="spec-item"><div class="spec-label">Max Total Current</div><div class="spec-value">15A</div></div>
+        <div class="spec-item"><div class="spec-label">Max Per Channel</div><div class="spec-value">10A</div></div>
+        <div class="spec-item"><div class="spec-label">Default Output</div><div class="spec-value">GPIO 16</div></div>
+        <div class="spec-item"><div class="spec-label">Secondary Output</div><div class="spec-value">GPIO 2</div></div>
+        <div class="spec-item"><div class="spec-label">Extended GPIOs</div><div class="spec-value">18, 19, 25, 33</div></div>
+        <div class="spec-item"><div class="spec-label">Connectivity</div><div class="spec-value">WiFi (2.4 GHz)</div></div>
+        <div class="spec-item"><div class="spec-label">Firmware Update</div><div class="spec-value">USB-C (UART)</div></div>
+        <div class="spec-item"><div class="spec-label">Dimensions</div><div class="spec-value">108 &times; 45 &times; 18 mm</div></div>
+        <div class="spec-item"><div class="spec-label">Operating Temp</div><div class="spec-value">-20&deg;C to 45&deg;C</div></div>
+        <div class="spec-item"><div class="spec-label">Max LEDs</div><div class="spec-value">800</div></div>
+        <div class="spec-item"><div class="spec-label">Supported Chips</div><div class="spec-value" style="font-size:0.8rem;">WS2811, WS2812B, WS2815, SK6812, +more</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.container -->
+</main>
+
+<!-- ─── Footer ─── -->
+<footer class="footer">
+  <p>Made with &#x1f525; by <a href="#">Bassahaulic</a></p>
+  <p style="margin-top:6px; font-size:0.78rem;">WLED is open-source software by Aircoookie. This guide is not affiliated with the WLED project.</p>
+</footer>
+
+<!-- ─── Toast Notification ─── -->
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+// ─── Matrix Rain ───
+(function() {
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:<>?/~';
+  const fontSize = 14;
+  let columns = Math.floor(canvas.width / fontSize);
+  let drops = new Array(columns).fill(1);
+
+  window.addEventListener('resize', () => {
+    columns = Math.floor(canvas.width / fontSize);
+    drops = new Array(columns).fill(1);
+  });
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff66';
+    ctx.font = fontSize + 'px monospace';
+
+    for (let i = 0; i < drops.length; i++) {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── Copy to Clipboard ───
+document.querySelectorAll('.code-val[data-copy]').forEach(el => {
+  el.addEventListener('click', () => {
+    const text = el.getAttribute('data-copy');
+    navigator.clipboard.writeText(text).then(() => {
+      el.classList.add('copied');
+      showToast('Copied "' + text + '"');
+      setTimeout(() => el.classList.remove('copied'), 1500);
+    }).catch(() => {
+      // Fallback for HTTP contexts where Clipboard API is blocked
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); el.classList.add('copied'); showToast('Copied "' + text + '"'); setTimeout(() => el.classList.remove('copied'), 1500); }
+      catch(e) { showToast('Copy: ' + text); }
+      document.body.removeChild(ta);
+    });
+  });
+});
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ─── Progress Dots — Scroll Tracking ───
+const sections = [];
+const dots = document.querySelectorAll('.progress-dot');
+
+dots.forEach(dot => {
+  const targetId = dot.getAttribute('data-target');
+  const target = document.getElementById(targetId);
+  if (target) sections.push({ el: target, dot: dot });
+
+  dot.addEventListener('click', () => {
+    const t = document.getElementById(targetId);
+    if (t) t.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    const match = sections.find(s => s.el === entry.target);
+    if (match && entry.isIntersecting) {
+      dots.forEach(d => d.classList.remove('active'));
+      match.dot.classList.add('active');
+      let found = false;
+      sections.forEach(s => {
+        if (s === match) { found = true; return; }
+        if (!found) s.dot.classList.add('completed');
+        else s.dot.classList.remove('completed');
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+
+sections.forEach(s => observer.observe(s.el));
+</script>
+</body>
+</html>
