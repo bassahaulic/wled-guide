@@ -13,7 +13,7 @@ Standalone HTML walkthrough guide for Bassahaulic customers setting up WLED on G
 
 ### Colors
 - Background: `#000000`
-- Accent magenta: `#e21aff`
+- Accent blue: `#0097ff`
 - Blue: `#0097ff`
 - Green: `#00ff66`
 - Red: `#ff3333`
@@ -27,7 +27,7 @@ Standalone HTML walkthrough guide for Bassahaulic customers setting up WLED on G
 - **Roboto** — body text, descriptions, weight 300-500
 
 ### Visual Effects
-- **Matrix rain** — animated falling character canvas used as background effect (green/magenta characters)
+- **Matrix rain** — animated falling character canvas used as background effect (green/blue characters)
 - **Glassmorphism** — frosted glass panels using `backdrop-filter: blur()` with semi-transparent backgrounds (`rgba(0, 0, 0, 0.6)` to `rgba(0, 0, 0, 0.85)`)
 - Border radius: 12px (cards), 18px (large cards), 999px (pills)
 
@@ -49,12 +49,12 @@ LED/
 ### Setup Guide (`index.html`)
 - All CSS is embedded in `<style>` within `index.html` — no external stylesheets
 - All JS is embedded in `<script>` at bottom of `index.html`
-- Image placeholders use class `.img-placeholder` with dashed magenta borders
+- Image placeholders use class `.img-placeholder` with dashed accent (blue) borders
 - Copy-to-clipboard elements use `.code-val[data-copy]` attribute pattern
 - Collapsible bonus sections use native `<details>/<summary>` elements
 - Progress tracking uses IntersectionObserver on elements with IDs matching `data-target` attributes on `.progress-dot` buttons
 - Step cards use `.step-card` with modifier classes: `--bonus`, `--trouble`, `--specs`
-- Section color-coding: magenta = main steps, blue = bonus, red = troubleshooting, green = specs
+- Section color-coding: blue (accent) = main steps, blue = bonus, red = troubleshooting, green = specs
 
 ### PWA Controller (`app/`)
 - Self-contained single-page app with embedded CSS and JS

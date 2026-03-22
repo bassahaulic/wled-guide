@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bass-wled-v1';
+const CACHE_NAME = 'bass-wled-v2';
 const PRECACHE_URLS = [
   './index.html',
   './manifest.json'

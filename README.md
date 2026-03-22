@@ -36,7 +36,7 @@ The `app/` directory contains a Progressive Web App for controlling WLED devices
 - **Glassmorphism UI** — frosted glass panels with backdrop blur effects
 
 ### Design System
-- **Background**: `#000000` | **Accent**: `#e21aff` | **Blue**: `#0097ff`
+- **Background**: `#000000` | **Accent**: `#0097ff` (blue) | **Secondary**: `#e21aff` (magenta)
 - **Text**: `#ffffff` | **Muted**: `#cccccc`
 - **Fonts**: Audiowide (brand headings), Orbitron (secondary headings/labels), Roboto (body)
 
@@ -46,7 +46,7 @@ The `app/` directory contains a Progressive Web App for controlling WLED devices
 - **Copy-to-clipboard** — tap `WLED-AP`, `wled1234`, or `4.3.2.1` to copy instantly
 - **Collapsible sections** — bonus topics hidden by default to keep it simple
 - **Mobile-first** — designed for use on a phone while setting up
-- **Dark theme** — Bassahaulic brand colors (magenta `#e21aff`, blue `#0097ff`, black `#000000`)
+- **Dark theme** — Bassahaulic brand colors (blue `#0097ff`, magenta `#e21aff`, black `#000000`)
 - **Zero dependencies** — single HTML file, works offline (after font load)
 
 ## File Structure

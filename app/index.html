@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Bassahaulic WLED Controller</title>
-  <meta name="theme-color" content="#e21aff">
+  <meta name="theme-color" content="#0097ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="./manifest.json">
@@ -15,7 +15,7 @@
 
     :root {
       --bg: #000000;
-      --accent: #e21aff;
+      --accent: #0097ff;
       --blue: #0097ff;
       --green: #00ff66;
       --red: #ff3333;
@@ -165,7 +165,7 @@
       color: var(--text);
     }
     .pill-btn.magenta { border: 1px solid var(--accent); }
-    .pill-btn.magenta:hover { background: var(--accent); color: #000; box-shadow: 0 0 16px rgba(226,26,255,0.4); }
+    .pill-btn.magenta:hover { background: var(--accent); color: #000; box-shadow: 0 0 16px rgba(0,151,255,0.4); }
     .pill-btn.blue { border: 1px solid var(--blue); }
     .pill-btn.blue:hover { background: var(--blue); color: #000; box-shadow: 0 0 16px rgba(0,151,255,0.4); }
 
@@ -224,7 +224,7 @@
       width: 100%;
       border-radius: 10px;
       border: 1px solid var(--glass-border);
-      box-shadow: 0 0 20px rgba(226, 26, 255, 0.15);
+      box-shadow: 0 0 20px rgba(0, 151, 255, 0.15);
     }
     .led-strip-label {
       font-family: 'Orbitron', sans-serif;
@@ -291,7 +291,7 @@
     .power-btn.on {
       background: var(--accent);
       color: #000;
-      box-shadow: 0 0 24px rgba(226,26,255,0.5), 0 0 48px rgba(226,26,255,0.2);
+      box-shadow: 0 0 24px rgba(0,151,255,0.5), 0 0 48px rgba(0,151,255,0.2);
     }
     .power-btn:active { transform: scale(0.94); }
 
@@ -328,7 +328,7 @@
       border-radius: 50%;
       background: var(--accent);
       border: none;
-      box-shadow: 0 0 8px rgba(226,26,255,0.5);
+      box-shadow: 0 0 8px rgba(0,151,255,0.5);
       cursor: pointer;
     }
     input[type="range"]::-moz-range-thumb {
@@ -336,7 +336,7 @@
       border-radius: 50%;
       background: var(--accent);
       border: none;
-      box-shadow: 0 0 8px rgba(226,26,255,0.5);
+      box-shadow: 0 0 8px rgba(0,151,255,0.5);
       cursor: pointer;
     }
     input[type="range"]::-webkit-slider-runnable-track {
@@ -437,6 +437,37 @@
     .fx-search:focus { border-color: var(--accent); }
     .fx-search::placeholder { color: rgba(255,255,255,0.3); }
 
+    .fx-categories {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 0 0 10px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .fx-categories::-webkit-scrollbar { display: none; }
+    .fx-cat-btn {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: transparent;
+      color: #cccccc;
+      font-family: 'Roboto', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      min-height: 32px;
+    }
+    .fx-cat-btn:hover { border-color: #0097ff; }
+    .fx-cat-btn.active {
+      background: rgba(0, 151, 255, 0.15);
+      border-color: #0097ff;
+      color: #ffffff;
+    }
+
     .fx-list {
       display: flex;
       flex-wrap: wrap;
@@ -463,8 +494,8 @@
     .fx-item:hover { border-color: var(--accent); }
     .fx-item.active {
       border-color: var(--accent);
-      background: rgba(226,26,255,0.15);
-      box-shadow: 0 0 10px rgba(226,26,255,0.25);
+      background: rgba(0,151,255,0.15);
+      box-shadow: 0 0 10px rgba(0,151,255,0.25);
     }
 
     /* ── Palettes Section ── */
@@ -527,7 +558,7 @@
     .preset-item:hover { border-color: var(--accent); }
     .preset-item.active {
       border-color: var(--accent);
-      background: rgba(226,26,255,0.15);
+      background: rgba(0,151,255,0.15);
     }
 
     .preset-del {
@@ -590,11 +621,643 @@
 
     /* ── Utility ── */
     .mb-8 { margin-bottom: 8px; }
+
+    /* ── Setup Wizard Overlay ── */
+    .wizard-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.92);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .wizard-overlay.open { display: flex; }
+
+    .wizard-card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 28px 20px 24px;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .wizard-close {
+      position: absolute;
+      top: 12px; right: 14px;
+      width: 36px; height: 36px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .wizard-close:hover { border-color: var(--red); color: var(--red); }
+
+    /* Step indicator */
+    .wizard-steps {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .wizard-step-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all 0.3s;
+    }
+    .wizard-step-dot.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 151, 255, 0.35);
+    }
+    .wizard-step-dot.done {
+      border-color: var(--green);
+      background: var(--green);
+      color: #000;
+    }
+
+    .wizard-title {
+      font-family: 'Audiowide', cursive;
+      font-size: 1.15rem;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Wizard step content */
+    .wizard-step-content {
+      display: none;
+    }
+    .wizard-step-content.active { display: block; }
+
+    /* Controller grid */
+    .wiz-ctrl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .wiz-ctrl-card {
+      padding: 14px 10px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-card);
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      min-height: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .wiz-ctrl-card .ctrl-img {
+      width: 100%;
+      max-width: 120px;
+      height: 72px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .wiz-ctrl-card .ctrl-img svg {
+      width: 100%;
+      height: 100%;
+    }
+    .wiz-ctrl-card:hover { border-color: var(--accent); }
+    .wiz-ctrl-card.selected {
+      border-color: var(--accent);
+      background: rgba(0, 151, 255, 0.08);
+      box-shadow: 0 0 16px rgba(0, 151, 255, 0.3);
+    }
+    .wiz-ctrl-card .ctrl-name {
+      font-family: 'Audiowide', cursive;
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .wiz-ctrl-card .ctrl-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .wiz-ctrl-card .ctrl-outputs {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+    }
+    .wiz-ctrl-card .ctrl-out-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+    .wiz-ctrl-card.selected .ctrl-out-dot { opacity: 1; }
+    .wiz-ctrl-card .ctrl-check {
+      display: none;
+      color: var(--green);
+      font-size: 1.1rem;
+      margin-top: 4px;
+    }
+    .wiz-ctrl-card.selected .ctrl-check { display: block; }
+
+    /* Wizard form elements */
+    .wiz-label {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .wiz-field { margin-bottom: 16px; }
+
+    .wiz-input, .wiz-select {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text);
+      font-family: 'Roboto', system-ui, sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .wiz-input:focus, .wiz-select:focus { border-color: var(--accent); }
+    .wiz-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+    .wiz-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+      cursor: pointer;
+    }
+
+    /* Quick-pick buttons */
+    .wiz-quick-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .wiz-quick-btn {
+      min-width: 54px;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-family: 'Roboto', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .wiz-quick-btn:hover { border-color: var(--accent); }
+    .wiz-quick-btn.active {
+      border-color: var(--accent);
+      background: rgba(0, 151, 255, 0.15);
+      color: var(--accent);
+    }
+
+    /* Radio row */
+    .wiz-radio-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .wiz-radio-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      min-height: 44px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .wiz-radio-label:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(0, 151, 255, 0.15);
+    }
+    .wiz-radio-label input[type="radio"] {
+      accent-color: var(--accent);
+      width: 16px; height: 16px;
+    }
+
+    /* Output checkboxes */
+    .wiz-output-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03);
+      margin-bottom: 6px;
+      min-height: 44px;
+    }
+    .wiz-output-row input[type="checkbox"] {
+      accent-color: var(--accent);
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+    }
+    .wiz-output-label {
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .wiz-output-default {
+      font-size: 0.65rem;
+      color: var(--accent);
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    /* Password toggle */
+    .wiz-pass-wrap {
+      position: relative;
+    }
+    .wiz-pass-wrap input { padding-right: 48px; }
+    .wiz-pass-toggle {
+      position: absolute;
+      right: 4px; top: 50%; transform: translateY(-50%);
+      width: 40px; height: 36px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-pill);
+    }
+    .wiz-pass-toggle:hover { color: var(--accent); }
+
+    .wiz-note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* Review summary */
+    .wiz-summary {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .wiz-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.85rem;
+    }
+    .wiz-summary-row:last-child { border-bottom: none; }
+    .wiz-summary-key {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+    .wiz-summary-val {
+      text-align: right;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    /* Wizard buttons */
+    .wizard-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .wiz-btn {
+      flex: 1;
+      min-height: 48px;
+      padding: 12px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+    .wiz-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .wiz-btn-next {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      box-shadow: 0 0 16px rgba(0, 151, 255, 0.3);
+    }
+    .wiz-btn-next:hover:not(:disabled) { box-shadow: 0 0 24px rgba(0, 151, 255, 0.5); }
+    .wiz-btn-back {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .wiz-btn-back:hover { border-color: var(--accent); color: var(--accent); }
+    .wiz-btn-apply {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-size: 0.9rem;
+      box-shadow: 0 0 20px rgba(0, 151, 255, 0.4);
+    }
+    .wiz-btn-apply:hover:not(:disabled) { box-shadow: 0 0 32px rgba(0, 151, 255, 0.6); }
+
+    .wiz-skip-link {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      font-family: 'Roboto', sans-serif;
+    }
+    .wiz-skip-link:hover { color: var(--accent); }
+
+    /* Wizard spinner */
+    .wiz-spinner {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .wiz-spinner.visible { display: block; }
+    .wiz-spinner-ring {
+      display: inline-block;
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: wizSpin 0.8s linear infinite;
+    }
+    @keyframes wizSpin {
+      to { transform: rotate(360deg); }
+    }
+    .wiz-spinner-text {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .wiz-result {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    .wiz-result.visible { display: block; }
+    .wiz-result-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+    .wiz-result-msg {
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .wiz-result-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* Setup Wizard button in conn-panel */
+    .setup-wizard-btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 20px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: var(--radius-pill);
+      background: transparent;
+      border: 1px solid rgba(0, 255, 102, 0.4);
+      color: var(--green);
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .setup-wizard-btn:hover {
+      background: rgba(0, 255, 102, 0.1);
+      box-shadow: 0 0 12px rgba(0, 255, 102, 0.2);
+    }
+
+    /* Step slide animation */
+    .wizard-step-content {
+      animation: wizFadeIn 0.25s ease;
+    }
+    @keyframes wizFadeIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
   </style>
 </head>
 <body>
 
 <canvas id="matrixCanvas"></canvas>
+
+<!-- Setup Wizard Overlay -->
+<div class="wizard-overlay" id="wizardOverlay">
+  <div class="wizard-card">
+    <button class="wizard-close" id="wizardClose">&times;</button>
+
+    <!-- Step Indicator -->
+    <div class="wizard-steps" id="wizardSteps">
+      <div class="wizard-step-dot active" data-wstep="1">1</div>
+      <div class="wizard-step-dot" data-wstep="2">2</div>
+      <div class="wizard-step-dot" data-wstep="3">3</div>
+      <div class="wizard-step-dot" data-wstep="4">4</div>
+    </div>
+
+    <!-- Step 1: Select Controller -->
+    <div class="wizard-step-content active" id="wizStep1">
+      <div class="wizard-title">Select Your Controller</div>
+      <div class="wiz-ctrl-grid" id="wizCtrlGrid"></div>
+      <div class="wizard-btn-row">
+        <button class="wiz-btn wiz-btn-next" id="wizNext1" disabled>Next</button>
+      </div>
+    </div>
+
+    <!-- Step 2: LED Strip Setup -->
+    <div class="wizard-step-content" id="wizStep2">
+      <div class="wizard-title">LED Strip Setup</div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">LED Type</label>
+        <select class="wiz-select" id="wizLedType">
+          <option value="22" selected>WS2811 / WS2812B</option>
+          <option value="30">SK6812 RGBW</option>
+        </select>
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Color Order</label>
+        <select class="wiz-select" id="wizColorOrder">
+          <option value="0">GRB</option>
+          <option value="1">RGB</option>
+          <option value="2">BRG</option>
+          <option value="3">RBG</option>
+          <option value="4">BGR</option>
+          <option value="5">GBR</option>
+        </select>
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">LEDs per Meter</label>
+        <div class="wiz-quick-row" id="wizLpmRow">
+          <button class="wiz-quick-btn" data-lpm="30">30</button>
+          <button class="wiz-quick-btn" data-lpm="60">60</button>
+          <button class="wiz-quick-btn active" data-lpm="96">96</button>
+          <button class="wiz-quick-btn" data-lpm="144">144</button>
+        </div>
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Strip Length</label>
+        <div class="wiz-quick-row" id="wizLenRow">
+          <button class="wiz-quick-btn" data-len="1">1m</button>
+          <button class="wiz-quick-btn" data-len="2">2m</button>
+          <button class="wiz-quick-btn" data-len="3">3m</button>
+          <button class="wiz-quick-btn active" data-len="5">5m</button>
+          <button class="wiz-quick-btn" data-len="10">10m</button>
+          <button class="wiz-quick-btn" data-len="0">Custom</button>
+        </div>
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Total LED Count</label>
+        <input class="wiz-input" type="number" id="wizLedCount" value="480" min="1" max="2048">
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Voltage</label>
+        <div class="wiz-radio-row">
+          <label class="wiz-radio-label"><input type="radio" name="wizVolt" value="5"> 5V</label>
+          <label class="wiz-radio-label"><input type="radio" name="wizVolt" value="12" checked> 12V</label>
+          <label class="wiz-radio-label"><input type="radio" name="wizVolt" value="24"> 24V</label>
+        </div>
+      </div>
+
+      <div class="wiz-field" id="wizOutputsField">
+        <label class="wiz-label">Outputs</label>
+        <div id="wizOutputsList"></div>
+      </div>
+
+      <div class="wizard-btn-row">
+        <button class="wiz-btn wiz-btn-back" id="wizBack2">Back</button>
+        <button class="wiz-btn wiz-btn-next" id="wizNext2">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 3: WiFi Setup -->
+    <div class="wizard-step-content" id="wizStep3">
+      <div class="wizard-title">WiFi Setup</div>
+
+      <div class="wiz-note">Your controller creates a "WLED-AP" hotspot. After setup, it will connect to your home WiFi.</div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Network Name (SSID)</label>
+        <input class="wiz-input" type="text" id="wizSSID" placeholder="Your WiFi network name" autocomplete="off">
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Password</label>
+        <div class="wiz-pass-wrap">
+          <input class="wiz-input" type="password" id="wizPass" placeholder="WiFi password" autocomplete="off">
+          <button class="wiz-pass-toggle" id="wizPassToggle" type="button">&#128065;</button>
+        </div>
+      </div>
+
+      <div class="wiz-field">
+        <label class="wiz-label">Device Name</label>
+        <input class="wiz-input" type="text" id="wizDevName" value="Bassahaulic-WLED" autocomplete="off">
+      </div>
+
+      <div class="wizard-btn-row">
+        <button class="wiz-btn wiz-btn-back" id="wizBack3">Back</button>
+        <button class="wiz-btn wiz-btn-next" id="wizNext3">Next</button>
+      </div>
+      <button class="wiz-skip-link" id="wizSkip3">Skip WiFi setup for now</button>
+    </div>
+
+    <!-- Step 4: Review & Apply -->
+    <div class="wizard-step-content" id="wizStep4">
+      <div class="wizard-title">Review & Apply</div>
+
+      <div class="wiz-summary" id="wizSummary"></div>
+
+      <div class="wiz-spinner" id="wizSpinner">
+        <div class="wiz-spinner-ring"></div>
+        <div class="wiz-spinner-text">Applying settings...</div>
+      </div>
+
+      <div class="wiz-result" id="wizResult">
+        <div class="wiz-result-icon" id="wizResultIcon"></div>
+        <div class="wiz-result-msg" id="wizResultMsg"></div>
+        <div class="wiz-result-sub" id="wizResultSub"></div>
+      </div>
+
+      <div class="wizard-btn-row" id="wizBtnRow4">
+        <button class="wiz-btn wiz-btn-back" id="wizBack4">Back</button>
+        <button class="wiz-btn wiz-btn-apply" id="wizApply">Apply Settings</button>
+      </div>
+
+      <div class="wizard-btn-row" id="wizDoneRow" style="display:none">
+        <button class="wiz-btn wiz-btn-next" id="wizDone">Done</button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <div class="app-wrap">
 
@@ -616,6 +1279,7 @@
     </div>
     <div class="conn-status" id="connStatus"></div>
     <div class="scan-results" id="scanResults"></div>
+    <button class="setup-wizard-btn" id="setupWizardBtn">&#9881; Run Setup Wizard</button>
   </div>
 
   <!-- Welcome -->
@@ -680,6 +1344,7 @@
     <!-- Effects -->
     <div class="glass effects-section">
       <div class="section-title">Effects</div>
+      <div class="fx-categories" id="fxCategories"></div>
       <input type="text" class="fx-search" id="fxSearch" placeholder="Search effects...">
       <div class="fx-list" id="fxList"></div>
       <div class="slider-row">
@@ -1254,6 +1919,7 @@ connectBtn.addEventListener('click', async () => {
       buildPalettes();
       buildPresets();
       updateUI(device.state);
+      checkAutoWizard(ip);
     };
     device.onDisconnect = () => {
       statusDot.classList.remove('connected');
@@ -1338,7 +2004,7 @@ const sendBri = debounce((val) => {
 briSlider.addEventListener('input', () => {
   const val = parseInt(briSlider.value);
   briLabel.textContent = Math.round(val / 255 * 100) + '%';
-  updateSliderFill(briSlider, '#e21aff');
+  updateSliderFill(briSlider, '#0097ff');
   sendBri(val);
 });
 
@@ -1385,6 +2051,30 @@ document.querySelectorAll('.qc').forEach(el => {
 });
 
 // ── Effects ──
+const fxCategories = {
+  'Favorites': [0, 9, 66, 17, 28, 8, 101, 65, 80, 88],
+  'Solid & Basic': [0, 1, 2, 3, 12, 16],
+  'Color Cycle': [5, 7, 8, 9, 65, 67, 68, 69],
+  'Chase & Motion': [28, 29, 30, 31, 32, 33, 15, 40, 41],
+  'Twinkle & Sparkle': [17, 20, 21, 22, 52, 53, 80, 81],
+  'Fire & Nature': [45, 66, 88, 43, 101, 104, 76, 77],
+  'Scanner & Wipe': [3, 4, 10, 11, 40, 41, 34],
+  'Audio Reactive': [128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140],
+  'All Effects': null
+};
+let activeCategory = 'Favorites';
+
+function filterEffects() {
+  const q = fxSearch.value.toLowerCase();
+  const indices = fxCategories[activeCategory];
+  document.querySelectorAll('.fx-item').forEach(btn => {
+    const idx = parseInt(btn.dataset.idx);
+    const nameMatch = !q || btn.textContent.toLowerCase().includes(q);
+    const catMatch = indices === null || indices.includes(idx);
+    btn.style.display = (nameMatch && catMatch) ? '' : 'none';
+  });
+}
+
 function buildEffects() {
   if (!device) return;
   fxList.innerHTML = '';
@@ -1400,13 +2090,29 @@ function buildEffects() {
     });
     fxList.appendChild(btn);
   });
+
+  // Build category filter
+  const catContainer = document.getElementById('fxCategories');
+  catContainer.innerHTML = '';
+  Object.keys(fxCategories).forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'fx-cat-btn' + (cat === activeCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.addEventListener('click', () => {
+      activeCategory = cat;
+      catContainer.querySelectorAll('.fx-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterEffects();
+    });
+    catContainer.appendChild(btn);
+  });
+
+  // Initial filter
+  filterEffects();
 }
 
 fxSearch.addEventListener('input', () => {
-  const q = fxSearch.value.toLowerCase();
-  document.querySelectorAll('.fx-item').forEach(btn => {
-    btn.style.display = btn.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
+  filterEffects();
 });
 
 // Speed
@@ -1416,7 +2122,7 @@ const sendSpeed = debounce((val) => {
 speedSlider.addEventListener('input', () => {
   const val = parseInt(speedSlider.value);
   speedVal.textContent = val;
-  updateSliderFill(speedSlider, '#e21aff');
+  updateSliderFill(speedSlider, '#0097ff');
   sendSpeed(val);
 });
 
@@ -1427,7 +2133,7 @@ const sendInt = debounce((val) => {
 intSlider.addEventListener('input', () => {
   const val = parseInt(intSlider.value);
   intVal.textContent = val;
-  updateSliderFill(intSlider, '#e21aff');
+  updateSliderFill(intSlider, '#0097ff');
   sendInt(val);
 });
 
@@ -1508,7 +2214,7 @@ function updateUI(state) {
   // Brightness
   briSlider.value = state.bri;
   briLabel.textContent = Math.round(state.bri / 255 * 100) + '%';
-  updateSliderFill(briSlider, '#e21aff');
+  updateSliderFill(briSlider, '#0097ff');
 
   const seg = state.seg && state.seg[0];
   if (!seg) return;
@@ -1537,10 +2243,10 @@ function updateUI(state) {
   // Speed / Intensity
   speedSlider.value = seg.sx;
   speedVal.textContent = seg.sx;
-  updateSliderFill(speedSlider, '#e21aff');
+  updateSliderFill(speedSlider, '#0097ff');
   intSlider.value = seg.ix;
   intVal.textContent = seg.ix;
-  updateSliderFill(intSlider, '#e21aff');
+  updateSliderFill(intSlider, '#0097ff');
 
   // Palette
   document.querySelectorAll('.pal-item').forEach(btn => {
@@ -1585,11 +2291,11 @@ demoBtn.addEventListener('click', async () => {
 // ── Init ──
 (function init() {
   // Init slider fills
-  updateSliderFill(briSlider, '#e21aff');
+  updateSliderFill(briSlider, '#0097ff');
   updateHueSliderFill();
   updateSatSliderFill();
-  updateSliderFill(speedSlider, '#e21aff');
-  updateSliderFill(intSlider, '#e21aff');
+  updateSliderFill(speedSlider, '#0097ff');
+  updateSliderFill(intSlider, '#0097ff');
   updateColorPreview();
 
   // Check for demo mode in URL
@@ -1610,6 +2316,498 @@ demoBtn.addEventListener('click', async () => {
     connPanel.classList.add('open');
   }
 })();
+
+// ── Setup Wizard ──
+const CONTROLLER_PROFILES = {
+  'gl-c-016wl-d': {
+    name: 'GL-C-016WL-D',
+    description: '2 Outputs \u00B7 15A Max \u00B7 Relay \u00B7 Mic',
+    outputs: [
+      { gpio: 16, label: 'Output 1 (GPIO16)', default: true },
+      { gpio: 2, label: 'Output 2 (GPIO2)', default: false }
+    ],
+    maxAmps: 15000,
+    relay: 12,
+    micPins: { sd: 26, ws: 5, sck: 21 },
+    extraGPIO: [18, 19, 25, 33]
+  },
+  'gl-c-309wl': {
+    name: 'GL-C-309WL',
+    description: '2 Outputs \u00B7 10A Max \u00B7 Compact',
+    outputs: [
+      { gpio: 16, label: 'Output 1 (IO16)', default: true },
+      { gpio: 2, label: 'Output 2 (IO2)', default: false }
+    ],
+    maxAmps: 10000,
+    relay: 12,
+    extraGPIO: [33]
+  },
+  'gl-c-017wl-d': {
+    name: 'GL-C-017WL-D',
+    description: '4 Outputs \u00B7 15A Max \u00B7 UART \u00B7 Mic',
+    outputs: [
+      { gpio: 16, label: 'Output 1 (GPIO16)', default: true },
+      { gpio: 4, label: 'Output 2 (GPIO4)', default: false },
+      { gpio: 2, label: 'Output 3 (GPIO2)', default: false },
+      { gpio: 1, label: 'Output 4 (GPIO1)', default: false }
+    ],
+    maxAmps: 15000,
+    micPins: { sd: 26, ws: 5, sck: 21 },
+    extraGPIO: [33]
+  },
+  'esp32-mini': {
+    name: 'ESP32 Mini',
+    description: '1 Output · 10A Max · Compact Inline',
+    outputs: [
+      { gpio: 16, label: 'Output (GPIO16)', default: true }
+    ],
+    maxAmps: 10000
+  }
+};
+
+const LED_TYPE_NAMES = { '22': 'WS281x', '30': 'SK6812 RGBW' };
+const COLOR_ORDER_NAMES = { '0': 'GRB', '1': 'RGB', '2': 'BRG', '3': 'RBG', '4': 'BGR', '5': 'GBR' };
+
+let wizCurrentStep = 1;
+let wizSelectedCtrl = null;
+let wizLpm = 96;
+let wizLen = 5;
+let wizIp = null;
+
+function showSetupWizard(ip) {
+  wizIp = ip;
+  wizCurrentStep = 1;
+  wizSelectedCtrl = null;
+  wizLpm = 96;
+  wizLen = 5;
+
+  // Reset form state
+  document.getElementById('wizLedType').value = '22';
+  document.getElementById('wizColorOrder').value = '0';
+  document.getElementById('wizLedCount').value = '480';
+  document.getElementById('wizSSID').value = '';
+  document.getElementById('wizPass').value = '';
+  document.getElementById('wizPass').type = 'password';
+  document.getElementById('wizDevName').value = 'Bassahaulic-WLED';
+  document.querySelector('input[name="wizVolt"][value="12"]').checked = true;
+
+  // Reset quick buttons
+  document.querySelectorAll('#wizLpmRow .wiz-quick-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lpm === '96');
+  });
+  document.querySelectorAll('#wizLenRow .wiz-quick-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.len === '5');
+  });
+
+  // Reset spinner/result
+  document.getElementById('wizSpinner').classList.remove('visible');
+  document.getElementById('wizResult').classList.remove('visible');
+  document.getElementById('wizBtnRow4').style.display = '';
+  document.getElementById('wizDoneRow').style.display = 'none';
+
+  // Build controller grid
+  buildWizControllerGrid();
+  updateWizStep();
+  document.getElementById('wizardOverlay').classList.add('open');
+}
+
+function hideSetupWizard() {
+  document.getElementById('wizardOverlay').classList.remove('open');
+}
+
+// Controller SVG illustrations
+const CTRL_SVGS = {
+  'gl-c-016wl-d': `<svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="8" width="100" height="56" rx="6" fill="#e8e8e8" stroke="#999" stroke-width="1.5"/>
+    <text x="60" y="22" text-anchor="middle" fill="#333" font-size="6" font-weight="bold" font-family="sans-serif">GLEDOPTO</text>
+    <text x="60" y="32" text-anchor="middle" fill="#555" font-size="5" font-family="sans-serif">GL-C-016WL-D</text>
+    <!-- Terminal blocks -->
+    <rect x="14" y="46" width="8" height="14" rx="1" fill="#4488cc"/>
+    <rect x="24" y="46" width="8" height="14" rx="1" fill="#cc4444"/>
+    <rect x="34" y="46" width="8" height="14" rx="1" fill="#4488cc"/>
+    <rect x="44" y="46" width="8" height="14" rx="1" fill="#cc4444"/>
+    <rect x="58" y="46" width="8" height="14" rx="1" fill="#4488cc"/>
+    <rect x="68" y="46" width="8" height="14" rx="1" fill="#cc4444"/>
+    <rect x="78" y="46" width="8" height="14" rx="1" fill="#4488cc"/>
+    <rect x="88" y="46" width="8" height="14" rx="1" fill="#cc4444"/>
+    <rect x="98" y="46" width="8" height="14" rx="1" fill="#4488cc"/>
+    <!-- Buttons -->
+    <circle cx="80" cy="40" r="3" fill="#888" stroke="#666"/>
+    <circle cx="92" cy="40" r="3" fill="#888" stroke="#666"/>
+    <text x="60" y="42" text-anchor="middle" fill="#0097ff" font-size="5" font-weight="bold" font-family="sans-serif">2 OUT</text>
+  </svg>`,
+  'gl-c-309wl': `<svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Compact hexagonal-ish shape -->
+    <path d="M25 16 L95 16 L105 36 L95 56 L25 56 L15 36 Z" fill="#e8e8e8" stroke="#999" stroke-width="1.5"/>
+    <text x="60" y="28" text-anchor="middle" fill="#333" font-size="6" font-weight="bold" font-family="sans-serif">GLEDOPTO</text>
+    <text x="60" y="38" text-anchor="middle" fill="#555" font-size="5" font-family="sans-serif">GL-C-309WL</text>
+    <!-- Terminal blocks -->
+    <rect x="30" y="44" width="7" height="10" rx="1" fill="#4488cc"/>
+    <rect x="39" y="44" width="7" height="10" rx="1" fill="#cc4444"/>
+    <rect x="48" y="44" width="7" height="10" rx="1" fill="#4488cc"/>
+    <rect x="57" y="44" width="7" height="10" rx="1" fill="#cc4444"/>
+    <rect x="66" y="44" width="7" height="10" rx="1" fill="#4488cc"/>
+    <rect x="75" y="44" width="7" height="10" rx="1" fill="#cc4444"/>
+    <text x="60" y="52" text-anchor="middle" fill="#0097ff" font-size="4" font-weight="bold" font-family="sans-serif">COMPACT</text>
+  </svg>`,
+  'gl-c-017wl-d': `<svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="8" width="108" height="56" rx="4" fill="#e87420" stroke="#c45a10" stroke-width="1.5"/>
+    <text x="60" y="20" text-anchor="middle" fill="#fff" font-size="5.5" font-weight="bold" font-family="sans-serif">GLEDOPTO</text>
+    <text x="60" y="30" text-anchor="middle" fill="#ffd" font-size="5" font-family="sans-serif">GL-C-017WL-D</text>
+    <!-- 4 output terminal blocks on right -->
+    <rect x="88" y="12" width="10" height="10" rx="1" fill="#cc4444"/>
+    <rect x="100" y="12" width="10" height="10" rx="1" fill="#4488cc"/>
+    <rect x="88" y="24" width="10" height="10" rx="1" fill="#cc4444"/>
+    <rect x="100" y="24" width="10" height="10" rx="1" fill="#4488cc"/>
+    <rect x="88" y="36" width="10" height="10" rx="1" fill="#cc4444"/>
+    <rect x="100" y="36" width="10" height="10" rx="1" fill="#4488cc"/>
+    <rect x="88" y="48" width="10" height="10" rx="1" fill="#cc4444"/>
+    <rect x="100" y="48" width="10" height="10" rx="1" fill="#4488cc"/>
+    <!-- Input terminal -->
+    <rect x="8" y="20" width="10" height="12" rx="1" fill="#cc4444"/>
+    <rect x="8" y="40" width="10" height="12" rx="1" fill="#4488cc"/>
+    <!-- Buttons -->
+    <circle cx="40" cy="52" r="3" fill="#ccc" stroke="#999"/>
+    <circle cx="52" cy="52" r="3" fill="#ccc" stroke="#999"/>
+    <text x="50" y="44" text-anchor="middle" fill="#fff" font-size="6" font-weight="bold" font-family="sans-serif">4 OUT</text>
+  </svg>`,
+  'esp32-mini': `<svg viewBox="0 0 120 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Inline oval controller -->
+    <rect x="8" y="28" width="30" height="16" rx="3" fill="#ddd" stroke="#999" stroke-width="1"/>
+    <line x1="38" y1="36" x2="45" y2="36" stroke="#ccc" stroke-width="2"/>
+    <ellipse cx="65" cy="36" rx="20" ry="18" fill="#f0f0f0" stroke="#999" stroke-width="1.5"/>
+    <circle cx="65" cy="36" r="8" fill="#ddd" stroke="#bbb" stroke-width="1"/>
+    <circle cx="65" cy="36" r="5" fill="#ccc"/>
+    <line x1="85" y1="36" x2="92" y2="36" stroke="#ccc" stroke-width="2"/>
+    <rect x="92" y="30" width="22" height="12" rx="5" fill="#ddd" stroke="#999" stroke-width="1"/>
+    <text x="65" y="62" text-anchor="middle" fill="#0097ff" font-size="5.5" font-weight="bold" font-family="sans-serif">MINI</text>
+    <text x="65" y="18" text-anchor="middle" fill="#aaa" font-size="5" font-family="sans-serif">ESP32 WLED</text>
+  </svg>`
+};
+
+function buildWizControllerGrid() {
+  const grid = document.getElementById('wizCtrlGrid');
+  grid.innerHTML = '';
+  Object.entries(CONTROLLER_PROFILES).forEach(([key, prof]) => {
+    const card = document.createElement('div');
+    card.className = 'wiz-ctrl-card';
+    card.dataset.ctrl = key;
+    let dotsHtml = '';
+    for (let i = 0; i < prof.outputs.length; i++) {
+      dotsHtml += '<div class="ctrl-out-dot"></div>';
+    }
+    const svgHtml = CTRL_SVGS[key] || '';
+    card.innerHTML = `
+      <div class="ctrl-img">${svgHtml}</div>
+      <div class="ctrl-name">${prof.name}</div>
+      <div class="ctrl-desc">${prof.description}</div>
+      <div class="ctrl-outputs">${dotsHtml}</div>
+      <div class="ctrl-check">\u2713</div>
+    `;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.wiz-ctrl-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      wizSelectedCtrl = key;
+      document.getElementById('wizNext1').disabled = false;
+      // Update outputs list in step 2
+      buildWizOutputsList();
+    });
+    grid.appendChild(card);
+  });
+}
+
+function buildWizOutputsList() {
+  const list = document.getElementById('wizOutputsList');
+  list.innerHTML = '';
+  if (!wizSelectedCtrl) return;
+  const prof = CONTROLLER_PROFILES[wizSelectedCtrl];
+  prof.outputs.forEach((out, i) => {
+    const row = document.createElement('div');
+    row.className = 'wiz-output-row';
+    const defaultTag = out.default ? ' <span class="wiz-output-default">PRIMARY</span>' : '';
+    row.innerHTML = `
+      <input type="checkbox" id="wizOut${i}" ${out.default ? 'checked' : ''} data-gpio="${out.gpio}" data-idx="${i}">
+      <div>
+        <div class="wiz-output-label">${out.label}${defaultTag}</div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updateWizStep() {
+  // Update step dots
+  document.querySelectorAll('.wizard-step-dot').forEach(dot => {
+    const s = parseInt(dot.dataset.wstep);
+    dot.classList.remove('active', 'done');
+    if (s === wizCurrentStep) dot.classList.add('active');
+    else if (s < wizCurrentStep) {
+      dot.classList.add('done');
+      dot.textContent = '\u2713';
+    } else {
+      dot.textContent = s;
+    }
+  });
+
+  // Show/hide step content
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('wizStep' + i);
+    if (i === wizCurrentStep) {
+      el.classList.add('active');
+      el.style.animation = 'none';
+      el.offsetHeight; // trigger reflow
+      el.style.animation = '';
+    } else {
+      el.classList.remove('active');
+    }
+  }
+
+  // Build review on step 4
+  if (wizCurrentStep === 4) buildWizSummary();
+}
+
+function wizCalcLedCount() {
+  return wizLen > 0 ? wizLpm * wizLen : parseInt(document.getElementById('wizLedCount').value) || 1;
+}
+
+function wizUpdateLedCount() {
+  if (wizLen > 0) {
+    document.getElementById('wizLedCount').value = wizLpm * wizLen;
+  }
+}
+
+function getWizConfig() {
+  const prof = CONTROLLER_PROFILES[wizSelectedCtrl];
+  const ledCount = parseInt(document.getElementById('wizLedCount').value) || 1;
+  const ledTypeCode = parseInt(document.getElementById('wizLedType').value);
+  const colorOrderCode = parseInt(document.getElementById('wizColorOrder').value);
+  const voltage = document.querySelector('input[name="wizVolt"]:checked')?.value || '12';
+
+  // Collect enabled outputs
+  const enabledOutputs = [];
+  document.querySelectorAll('#wizOutputsList input[type="checkbox"]').forEach(cb => {
+    if (cb.checked) {
+      enabledOutputs.push({ gpio: parseInt(cb.dataset.gpio), idx: parseInt(cb.dataset.idx) });
+    }
+  });
+
+  const primaryOutput = enabledOutputs.length > 0 ? enabledOutputs[0] : { gpio: prof.outputs[0].gpio, idx: 0 };
+  const extraOutputs = enabledOutputs.slice(1).map((out, i) => ({
+    gpio: out.gpio,
+    start: 0,
+    count: ledCount
+  }));
+
+  return {
+    controller: prof.name,
+    controllerKey: wizSelectedCtrl,
+    gpio: primaryOutput.gpio,
+    ledCount,
+    ledTypeCode,
+    ledTypeName: LED_TYPE_NAMES[String(ledTypeCode)] || 'WS281x',
+    colorOrderCode,
+    colorOrderName: COLOR_ORDER_NAMES[String(colorOrderCode)] || 'GRB',
+    voltage,
+    maxAmps: prof.maxAmps,
+    extraOutputs,
+    ssid: document.getElementById('wizSSID').value.trim(),
+    password: document.getElementById('wizPass').value,
+    deviceName: document.getElementById('wizDevName').value.trim() || 'WLED'
+  };
+}
+
+function buildWizSummary() {
+  const cfg = getWizConfig();
+  const summaryEl = document.getElementById('wizSummary');
+  let outputsHtml = `GPIO${cfg.gpio} \u00B7 ${cfg.ledCount} LEDs \u00B7 ${cfg.ledTypeName} \u00B7 ${cfg.colorOrderName}`;
+  if (cfg.extraOutputs.length > 0) {
+    cfg.extraOutputs.forEach(out => {
+      outputsHtml += `<br>GPIO${out.gpio} \u00B7 ${out.count} LEDs`;
+    });
+  }
+  let rows = `
+    <div class="wiz-summary-row"><span class="wiz-summary-key">Controller</span><span class="wiz-summary-val">${cfg.controller}</span></div>
+    <div class="wiz-summary-row"><span class="wiz-summary-key">Output(s)</span><span class="wiz-summary-val">${outputsHtml}</span></div>
+    <div class="wiz-summary-row"><span class="wiz-summary-key">Voltage</span><span class="wiz-summary-val">${cfg.voltage}V</span></div>
+    <div class="wiz-summary-row"><span class="wiz-summary-key">Max Current</span><span class="wiz-summary-val">${cfg.maxAmps}mA</span></div>
+  `;
+  if (cfg.ssid) {
+    rows += `
+      <div class="wiz-summary-row"><span class="wiz-summary-key">WiFi</span><span class="wiz-summary-val">${cfg.ssid}</span></div>
+      <div class="wiz-summary-row"><span class="wiz-summary-key">Device Name</span><span class="wiz-summary-val">${cfg.deviceName}</span></div>
+    `;
+  } else {
+    rows += `<div class="wiz-summary-row"><span class="wiz-summary-key">WiFi</span><span class="wiz-summary-val" style="color:var(--muted)">Skipped</span></div>`;
+  }
+  summaryEl.innerHTML = rows;
+}
+
+async function applyWizardSettings(ip, config) {
+  // 1. Apply LED settings
+  const ledForm = new URLSearchParams();
+  ledForm.append('LS0', '0');
+  ledForm.append('LC0', String(config.ledCount));
+  ledForm.append('LT0', String(config.ledTypeCode));
+  ledForm.append('CO0', String(config.colorOrderCode));
+  ledForm.append('LP0', String(config.gpio));
+  ledForm.append('MA', String(config.maxAmps));
+  // Additional outputs if enabled
+  config.extraOutputs.forEach((out, i) => {
+    const n = i + 1;
+    ledForm.append(`LS${n}`, String(out.start));
+    ledForm.append(`LC${n}`, String(out.count));
+    ledForm.append(`LT${n}`, String(config.ledTypeCode));
+    ledForm.append(`CO${n}`, String(config.colorOrderCode));
+    ledForm.append(`LP${n}`, String(out.gpio));
+  });
+
+  await fetch(`http://${ip}/settings/leds`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: ledForm.toString()
+  });
+
+  // 2. Apply WiFi settings (if provided)
+  if (config.ssid) {
+    const wifiForm = new URLSearchParams();
+    wifiForm.append('CS', config.ssid);
+    wifiForm.append('CP', config.password || '');
+    wifiForm.append('CM', config.deviceName || 'wled');
+    wifiForm.append('AB', '1');
+
+    await fetch(`http://${ip}/settings/wifi`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: wifiForm.toString()
+    });
+  }
+
+  // Mark setup as done for this device
+  localStorage.setItem(`wled_setup_done_${ip}`, '1');
+}
+
+// Wizard event listeners
+document.getElementById('wizardClose').addEventListener('click', hideSetupWizard);
+
+// Step 1 Next
+document.getElementById('wizNext1').addEventListener('click', () => {
+  if (!wizSelectedCtrl) return;
+  buildWizOutputsList();
+  wizCurrentStep = 2;
+  updateWizStep();
+});
+
+// Step 2 navigation
+document.getElementById('wizBack2').addEventListener('click', () => { wizCurrentStep = 1; updateWizStep(); });
+document.getElementById('wizNext2').addEventListener('click', () => { wizCurrentStep = 3; updateWizStep(); });
+
+// Step 3 navigation
+document.getElementById('wizBack3').addEventListener('click', () => { wizCurrentStep = 2; updateWizStep(); });
+document.getElementById('wizNext3').addEventListener('click', () => { wizCurrentStep = 4; updateWizStep(); });
+document.getElementById('wizSkip3').addEventListener('click', () => {
+  document.getElementById('wizSSID').value = '';
+  document.getElementById('wizPass').value = '';
+  wizCurrentStep = 4;
+  updateWizStep();
+});
+
+// Step 4 navigation
+document.getElementById('wizBack4').addEventListener('click', () => { wizCurrentStep = 3; updateWizStep(); });
+
+// Apply
+document.getElementById('wizApply').addEventListener('click', async () => {
+  const cfg = getWizConfig();
+  const spinner = document.getElementById('wizSpinner');
+  const result = document.getElementById('wizResult');
+  const btnRow = document.getElementById('wizBtnRow4');
+  const summary = document.getElementById('wizSummary');
+
+  btnRow.style.display = 'none';
+  summary.style.display = 'none';
+  spinner.classList.add('visible');
+  result.classList.remove('visible');
+
+  try {
+    await applyWizardSettings(wizIp, cfg);
+    spinner.classList.remove('visible');
+    document.getElementById('wizResultIcon').textContent = '\u2705';
+    document.getElementById('wizResultMsg').textContent = 'Settings applied successfully!';
+    document.getElementById('wizResultSub').textContent = cfg.ssid
+      ? 'Your controller will reboot and connect to ' + cfg.ssid + '.'
+      : 'LED configuration has been updated.';
+    result.classList.add('visible');
+    document.getElementById('wizDoneRow').style.display = '';
+  } catch(err) {
+    spinner.classList.remove('visible');
+    document.getElementById('wizResultIcon').textContent = '\u274C';
+    document.getElementById('wizResultMsg').textContent = 'Failed to apply settings';
+    document.getElementById('wizResultSub').textContent = err.message || 'Check connection and try again.';
+    result.classList.add('visible');
+    btnRow.style.display = '';
+    summary.style.display = '';
+  }
+});
+
+document.getElementById('wizDone').addEventListener('click', hideSetupWizard);
+
+// LEDs per meter quick buttons
+document.querySelectorAll('#wizLpmRow .wiz-quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#wizLpmRow .wiz-quick-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    wizLpm = parseInt(btn.dataset.lpm);
+    wizUpdateLedCount();
+  });
+});
+
+// Strip length quick buttons
+document.querySelectorAll('#wizLenRow .wiz-quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#wizLenRow .wiz-quick-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    wizLen = parseInt(btn.dataset.len);
+    if (wizLen === 0) {
+      document.getElementById('wizLedCount').focus();
+    } else {
+      wizUpdateLedCount();
+    }
+  });
+});
+
+// LED count manual input syncs with Custom
+document.getElementById('wizLedCount').addEventListener('input', () => {
+  // If user manually edits, switch to custom
+  if (wizLen !== 0) {
+    wizLen = 0;
+    document.querySelectorAll('#wizLenRow .wiz-quick-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.len === '0');
+    });
+  }
+});
+
+// Password show/hide toggle
+document.getElementById('wizPassToggle').addEventListener('click', () => {
+  const passInput = document.getElementById('wizPass');
+  passInput.type = passInput.type === 'password' ? 'text' : 'password';
+});
+
+// Setup Wizard button in connection panel
+document.getElementById('setupWizardBtn').addEventListener('click', () => {
+  const ip = ipInput.value.trim() || (device ? device.ip : '');
+  if (!ip || ip === 'demo') {
+    connStatus.textContent = 'Enter a device IP first';
+    return;
+  }
+  showSetupWizard(ip);
+});
+
+// Function to check and auto-launch wizard after connection
+function checkAutoWizard(ip) {
+  if (isDemo) return;
+  if (!localStorage.getItem('wled_setup_done_' + ip)) {
+    setTimeout(() => showSetupWizard(ip), 600);
+  }
+}
 
 // ── Service Worker ──
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
