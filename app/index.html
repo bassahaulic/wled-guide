@@ -9,6 +9,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@700;900&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -450,22 +452,22 @@
       flex-shrink: 0;
       padding: 6px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid var(--glass-border);
       background: transparent;
-      color: #cccccc;
+      color: var(--muted);
       font-family: 'Roboto', sans-serif;
       font-size: 0.75rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
       white-space: nowrap;
       min-height: 32px;
     }
-    .fx-cat-btn:hover { border-color: #0097ff; }
+    .fx-cat-btn:hover { border-color: var(--accent); }
     .fx-cat-btn.active {
       background: rgba(0, 151, 255, 0.15);
-      border-color: #0097ff;
-      color: #ffffff;
+      border-color: var(--accent);
+      color: var(--text);
     }
 
     .fx-list {
@@ -577,6 +579,11 @@
       transition: opacity 0.2s;
     }
     .preset-del:hover { opacity: 1; }
+    .preset-del.confirming {
+      background: var(--red);
+      color: #fff;
+      transform: scale(1.2);
+    }
 
     .save-form {
       display: none;
@@ -632,7 +639,7 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      overflow-y: auto;
+      overflow: hidden;
     }
     .wizard-overlay.open { display: flex; }
 
@@ -648,6 +655,7 @@
       position: relative;
       max-height: 90vh;
       overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .wizard-close {
@@ -681,7 +689,7 @@
       font-size: 0.7rem;
       font-weight: 700;
       color: var(--muted);
-      transition: all 0.3s;
+      transition: border-color 0.3s, background 0.3s, color 0.3s, box-shadow 0.3s;
     }
     .wizard-step-dot.active {
       border-color: var(--accent);
@@ -708,7 +716,7 @@
     .wizard-step-content {
       display: none;
     }
-    .wizard-step-content.active { display: block; }
+    .wizard-step-content.active { display: block; animation: wizFadeIn 0.25s ease; }
 
     /* Controller grid */
     .wiz-ctrl-grid {
@@ -1092,12 +1100,102 @@
     }
 
     /* Step slide animation */
-    .wizard-step-content {
-      animation: wizFadeIn 0.25s ease;
-    }
     @keyframes wizFadeIn {
       from { opacity: 0; transform: translateX(20px); }
       to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Focus Visible ── */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── Responsive: Tablet (640px+) ── */
+    @media (min-width: 640px) {
+      .app-wrap {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .pal-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .fx-list {
+        max-height: 320px;
+      }
+      .pal-grid {
+        max-height: 320px;
+      }
+      .conn-panel {
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    /* ── Responsive: Desktop (900px+) ── */
+    @media (min-width: 900px) {
+      .app-wrap {
+        max-width: 1000px;
+      }
+      .header {
+        padding: 16px 32px;
+      }
+      .header-brand {
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+      }
+      .section-title {
+        font-size: 1rem;
+        letter-spacing: 3px;
+      }
+      .bri-wrap {
+        max-width: 500px;
+      }
+      .pal-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .wizard-card {
+        max-width: 560px;
+        padding: 36px 32px 28px;
+      }
+      .qc:hover {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+      }
+    }
+
+    /* ── Responsive: Wide Desktop (1200px+) ── */
+    @media (min-width: 1200px) {
+      .app-wrap {
+        max-width: 1100px;
+      }
+      .pal-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    /* ── Landscape on phone ── */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .header {
+        padding-top: calc(6px + var(--safe-top));
+        padding-bottom: 6px;
+      }
+      .main-controls {
+        padding-bottom: calc(20px + var(--safe-bottom));
+      }
+    }
+
+    /* ── Reduced Motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      #matrixCanvas {
+        display: none !important;
+      }
+      .wizard-step-content.active {
+        animation: none !important;
+      }
+      * {
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
@@ -1388,18 +1486,29 @@
 </div>
 
 <script>
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 // ── Matrix Rain ──
 (function() {
   const canvas = document.getElementById('matrixCanvas');
   const ctx = canvas.getContext('2d');
-  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-  resize();
-  window.addEventListener('resize', resize);
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:<>?/~';
   const fontSize = 14;
   let columns = Math.floor(canvas.width / fontSize);
   let drops = new Array(columns).fill(1);
-  window.addEventListener('resize', () => { columns = Math.floor(canvas.width / fontSize); drops = new Array(columns).fill(1); });
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    columns = Math.floor(canvas.width / fontSize);
+    drops = new Array(columns).fill(1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  let matrixRafId;
   function draw() {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1411,10 +1520,16 @@
       if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
       drops[i]++;
     }
-    requestAnimationFrame(draw);
+    matrixRafId = requestAnimationFrame(draw);
   }
-  draw();
+  matrixRafId = requestAnimationFrame(draw);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) cancelAnimationFrame(matrixRafId);
+    else matrixRafId = requestAnimationFrame(draw);
+  });
 })();
+
+const ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0097ff';
 
 // ── Debounce ──
 function debounce(fn, ms) {
@@ -1659,6 +1774,7 @@ class WLEDDemoDevice {
 const ledCanvas = document.getElementById('ledStripCanvas');
 const ledCtx = ledCanvas ? ledCanvas.getContext('2d') : null;
 let ledAnimFrame = 0;
+let lastLedW = 0;
 
 function renderLEDStrip() {
   if (!ledCanvas || !ledCtx || !device || !device.state) return;
@@ -1666,8 +1782,11 @@ function renderLEDStrip() {
   const seg = state.seg[0];
   const count = device.info ? device.info.leds.count : 30;
   const w = ledCanvas.parentElement.clientWidth - 32;
-  ledCanvas.width = w;
-  ledCanvas.height = 20;
+  if (w !== lastLedW && w > 0) {
+    ledCanvas.width = w;
+    ledCanvas.height = 20;
+    lastLedW = w;
+  }
   const ledW = Math.max(2, (w / count) - 1);
   const gap = 1;
 
@@ -1745,8 +1864,6 @@ function renderLEDStrip() {
     r = Math.round(r * bri); g = Math.round(g * bri); b = Math.round(b * bri);
 
     ledCtx.fillStyle = `rgb(${r},${g},${b})`;
-    ledCtx.shadowColor = `rgb(${r},${g},${b})`;
-    ledCtx.shadowBlur = 4;
     ledCtx.beginPath();
     ledCtx.roundRect(x, 2, ledW, 16, 2);
     ledCtx.fill();
@@ -1876,7 +1993,10 @@ function updateSatSliderFill() {
   const rgb = hsvToRgb(currentHue, 100, 100);
   const fullColor = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
   const pct = ((satSlider.value - satSlider.min) / (satSlider.max - satSlider.min)) * 100;
-  satSlider.style.background = `linear-gradient(to right, #808080, ${fullColor} ${pct}%, #1a1a1a ${pct}%)`;
+  const currentRgb = hsvToRgb(currentHue, parseInt(satSlider.value), 100);
+  const currentColor = `rgb(${currentRgb[0]},${currentRgb[1]},${currentRgb[2]})`;
+  satSlider.style.background =
+    `linear-gradient(to right, #808080, ${currentColor} ${pct}%, #1a1a1a ${pct}%)`;
 }
 
 // ── Update Color Preview ──
@@ -2004,7 +2124,7 @@ const sendBri = debounce((val) => {
 briSlider.addEventListener('input', () => {
   const val = parseInt(briSlider.value);
   briLabel.textContent = Math.round(val / 255 * 100) + '%';
-  updateSliderFill(briSlider, '#0097ff');
+  updateSliderFill(briSlider, ACCENT);
   sendBri(val);
 });
 
@@ -2078,6 +2198,7 @@ function filterEffects() {
 function buildEffects() {
   if (!device) return;
   fxList.innerHTML = '';
+  const fxFragment = document.createDocumentFragment();
   device.effects.forEach((name, idx) => {
     const btn = document.createElement('button');
     btn.className = 'fx-item';
@@ -2088,8 +2209,9 @@ function buildEffects() {
       document.querySelectorAll('.fx-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
-    fxList.appendChild(btn);
+    fxFragment.appendChild(btn);
   });
+  fxList.appendChild(fxFragment);
 
   // Build category filter
   const catContainer = document.getElementById('fxCategories');
@@ -2111,9 +2233,7 @@ function buildEffects() {
   filterEffects();
 }
 
-fxSearch.addEventListener('input', () => {
-  filterEffects();
-});
+fxSearch.addEventListener('input', debounce(filterEffects, 80));
 
 // Speed
 const sendSpeed = debounce((val) => {
@@ -2122,7 +2242,7 @@ const sendSpeed = debounce((val) => {
 speedSlider.addEventListener('input', () => {
   const val = parseInt(speedSlider.value);
   speedVal.textContent = val;
-  updateSliderFill(speedSlider, '#0097ff');
+  updateSliderFill(speedSlider, ACCENT);
   sendSpeed(val);
 });
 
@@ -2133,7 +2253,7 @@ const sendInt = debounce((val) => {
 intSlider.addEventListener('input', () => {
   const val = parseInt(intSlider.value);
   intVal.textContent = val;
-  updateSliderFill(intSlider, '#0097ff');
+  updateSliderFill(intSlider, ACCENT);
   sendInt(val);
 });
 
@@ -2141,6 +2261,7 @@ intSlider.addEventListener('input', () => {
 function buildPalettes() {
   if (!device) return;
   palGrid.innerHTML = '';
+  const palFragment = document.createDocumentFragment();
   device.palettes.forEach((name, idx) => {
     const btn = document.createElement('button');
     btn.className = 'pal-item';
@@ -2151,8 +2272,9 @@ function buildPalettes() {
       document.querySelectorAll('.pal-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
-    palGrid.appendChild(btn);
+    palFragment.appendChild(btn);
   });
+  palGrid.appendChild(palFragment);
 }
 
 // ── Presets ──
@@ -2176,13 +2298,21 @@ function buildPresets() {
     });
 
     const del = document.createElement('button');
+    del.textContent = '×';
     del.className = 'preset-del';
-    del.textContent = '\u00D7';
-    del.addEventListener('click', async (e) => {
+    del.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!confirm(`Delete preset "${name}"?`)) return;
-      await device.deletePreset(slot);
-      buildPresets();
+      if (del.classList.contains('confirming')) {
+        device.deletePreset(slot);
+        buildPresets();
+      } else {
+        del.classList.add('confirming');
+        del.textContent = '?';
+        setTimeout(() => {
+          del.classList.remove('confirming');
+          del.textContent = '×';
+        }, 3000);
+      }
     });
     item.appendChild(del);
     presetGrid.appendChild(item);
@@ -2207,6 +2337,7 @@ savePresetBtn.addEventListener('click', async () => {
 });
 
 // ── Update UI from state ──
+let _lastFxIdx = -1, _lastPalIdx = -1;
 function updateUI(state) {
   if (!state) return;
   updatePowerUI(state.on);
@@ -2214,7 +2345,7 @@ function updateUI(state) {
   // Brightness
   briSlider.value = state.bri;
   briLabel.textContent = Math.round(state.bri / 255 * 100) + '%';
-  updateSliderFill(briSlider, '#0097ff');
+  updateSliderFill(briSlider, ACCENT);
 
   const seg = state.seg && state.seg[0];
   if (!seg) return;
@@ -2236,22 +2367,28 @@ function updateUI(state) {
   }
 
   // Effect
-  document.querySelectorAll('.fx-item').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.idx) === seg.fx);
-  });
+  if (seg.fx !== _lastFxIdx) {
+    document.querySelectorAll('.fx-item').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.idx) === seg.fx);
+    });
+    _lastFxIdx = seg.fx;
+  }
 
   // Speed / Intensity
   speedSlider.value = seg.sx;
   speedVal.textContent = seg.sx;
-  updateSliderFill(speedSlider, '#0097ff');
+  updateSliderFill(speedSlider, ACCENT);
   intSlider.value = seg.ix;
   intVal.textContent = seg.ix;
-  updateSliderFill(intSlider, '#0097ff');
+  updateSliderFill(intSlider, ACCENT);
 
   // Palette
-  document.querySelectorAll('.pal-item').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.idx) === seg.pal);
-  });
+  if (seg.pal !== _lastPalIdx) {
+    document.querySelectorAll('.pal-item').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.idx) === seg.pal);
+    });
+    _lastPalIdx = seg.pal;
+  }
 }
 
 // ── Demo Mode ──
@@ -2291,11 +2428,11 @@ demoBtn.addEventListener('click', async () => {
 // ── Init ──
 (function init() {
   // Init slider fills
-  updateSliderFill(briSlider, '#0097ff');
+  updateSliderFill(briSlider, ACCENT);
   updateHueSliderFill();
   updateSatSliderFill();
-  updateSliderFill(speedSlider, '#0097ff');
-  updateSliderFill(intSlider, '#0097ff');
+  updateSliderFill(speedSlider, ACCENT);
+  updateSliderFill(intSlider, ACCENT);
   updateColorPreview();
 
   // Check for demo mode in URL
@@ -2375,6 +2512,7 @@ let wizLen = 5;
 let wizIp = null;
 
 function showSetupWizard(ip) {
+  document.body.style.overflow = 'hidden';
   wizIp = ip;
   wizCurrentStep = 1;
   wizSelectedCtrl = null;
@@ -2412,6 +2550,7 @@ function showSetupWizard(ip) {
 }
 
 function hideSetupWizard() {
+  document.body.style.overflow = '';
   document.getElementById('wizardOverlay').classList.remove('open');
 }
 
@@ -2633,8 +2772,8 @@ function buildWizSummary() {
   `;
   if (cfg.ssid) {
     rows += `
-      <div class="wiz-summary-row"><span class="wiz-summary-key">WiFi</span><span class="wiz-summary-val">${cfg.ssid}</span></div>
-      <div class="wiz-summary-row"><span class="wiz-summary-key">Device Name</span><span class="wiz-summary-val">${cfg.deviceName}</span></div>
+      <div class="wiz-summary-row"><span class="wiz-summary-key">WiFi</span><span class="wiz-summary-val">${escapeHTML(cfg.ssid)}</span></div>
+      <div class="wiz-summary-row"><span class="wiz-summary-key">Device Name</span><span class="wiz-summary-val">${escapeHTML(cfg.deviceName)}</span></div>
     `;
   } else {
     rows += `<div class="wiz-summary-row"><span class="wiz-summary-key">WiFi</span><span class="wiz-summary-val" style="color:var(--muted)">Skipped</span></div>`;
@@ -2809,8 +2948,28 @@ function checkAutoWizard(ip) {
   }
 }
 
+// ── Install Prompt ──
+let deferredInstallPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const installBtn = document.createElement('button');
+  installBtn.className = 'pill-btn';
+  installBtn.textContent = 'Install App';
+  installBtn.style.cssText = 'font-size:0.7rem;padding:6px 12px;margin-left:8px;';
+  installBtn.addEventListener('click', () => {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(() => {
+      deferredInstallPrompt = null;
+      installBtn.remove();
+    });
+  });
+  const header = document.querySelector('.header-right');
+  if (header) header.appendChild(installBtn);
+});
+
 // ── Service Worker ──
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW registration failed:', err));
 </script>
 </body>
 </html>
